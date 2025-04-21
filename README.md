@@ -19,7 +19,7 @@ A web-based tool that generates MermaidJS diagrams from text descriptions using 
 
 1. Clone the repository:
 ```bash
-git clone [https://github.com/yourusername/mermaid-diagram-generator.git](https://github.com/HishamLB/Mermaid-Diagram-Generator-.git)
+git clone (https://github.com/HishamLB/Mermaid-Diagram-Generator-.git)
 cd mermaid-diagram-generator
 ```
 
