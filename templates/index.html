@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MermaidJS Diagram Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.4.0/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        /* Add navbar styles */
+        .navbar {
+            background: #2c3e50;
+            color: white;
+            padding: 1rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+            animation: pulse 2s infinite;
+            display: inline-block;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Adjust body margin to account for navbar */
+        body {
+            max-width: 800px;
+            margin: 6rem auto 2rem auto;
+            padding: 0 1rem;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        button {
+            padding: 0.8rem 1.5rem;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            color: #666;
+        }
+
+        .loading.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #diagramOutput {
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        #diagramOutput.visible {
+            opacity: 1;
+        }
+
+        #error {
+            color: #dc3545;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        #debug {
+            font-family: monospace;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="https://github.com/HishamLB" target="_blank">
+            Hesham Eisa
+        </a>
+    </nav>
+    <div class="container">
+        <h1>MermaidJS Diagram Generator</h1>
+        <textarea id="prompt" placeholder="Enter your diagram description..."></textarea>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <button onclick="generateDiagram()">Generate Diagram</button>
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <span>Generating diagram...</span>
+            </div>
+        </div>
+        <div id="error"></div>
+        <div id="debug"></div>
+        <div id="diagramOutput"></div>
+    </div>
+
+    <script>
+        mermaid.initialize({ startOnLoad: true });
+
+        async function generateDiagram() {
+            const prompt = document.getElementById('prompt').value;
+            const errorDiv = document.getElementById('error');
+            const debugDiv = document.getElementById('debug');
+            const loadingDiv = document.getElementById('loading');
+            const button = document.querySelector('button');
+            const output = document.getElementById('diagramOutput');
+            
+            errorDiv.textContent = '';
+            debugDiv.textContent = '';
+            output.classList.remove('visible');
+            button.disabled = true;
+            loadingDiv.classList.add('active');
+
+            try {
+                console.log('Sending prompt:', prompt);
+                const response = await axios.post('/generate', { prompt });
+                console.log('Received response:', response.data);
+
+                const diagramCode = response.data.mermaid_code;
+                if (!diagramCode) {
+                    throw new Error('No diagram code received from server');
+                }
+
+                output.innerHTML = `<pre class="mermaid">${diagramCode}</pre>`;
+                await mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+                output.classList.add('visible');
+            } catch (error) {
+                console.error('Error:', error);
+                errorDiv.textContent = `Error: ${error.message}`;
+                if (error.response) {
+                    debugDiv.textContent += '\nServer Response: ' + JSON.stringify(error.response.data, null, 2);
+                }
+            } finally {
+                button.disabled = false;
+                loadingDiv.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
